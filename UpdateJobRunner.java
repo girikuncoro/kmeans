@@ -27,9 +27,21 @@ public class UpdateJobRunner
     public static Job createUpdateJob(int jobId, String inputDirectory, String outputDirectory)
         throws IOException
     {
-        System.out.println("TODO");
-        System.exit(1);
-        return null;
+    	// Create new job configuration
+    	Job job = new Job(new Configuration(), "job"+Integer.toString(jobId));
+    	job.setJarByClass(KMeans.class);
+    	job.setMapperClass(PointToClusterMapper.class);
+    	job.setMapOutputKeyClass(IntWritable.class);
+    	job.setMapOutputValueClass(Point.class);
+    	job.setReducerClass(ClusterToPointReducer.class);
+    	job.setOutputKeyClass(IntWritable.class);
+    	job.setOutputValueClass(Point.class);
+    	
+    	FileInputFormat.addInputPath(job, new Path(inputDirectory));
+    	FileOutputFormat.setOutputPath(job, new Path(outputDirectory));
+    	job.setInputFormatClass(KeyValueTextInputFormat.class);
+    	
+        return job;
     }
 
     /**
@@ -47,11 +59,53 @@ public class UpdateJobRunner
      * @param outputDirectory The path to the directory to which to put Hadoop output files
      * @return The number of iterations that were executed.
      */
+	public static ArrayList<Point> oldCentroids = new ArrayList<Point>();
+	
     public static int runUpdateJobs(int maxIterations, String inputDirectory,
-        String outputDirectory)
-    {
-        System.out.println("TODO");
-        System.exit(1);
-        return 0;
+        String outputDirectory) {
+    	int iteration = 0;
+    	boolean isChanged = true;
+    	Job[] jobs = new Job[maxIterations];
+    	populateOldCentroids();
+    	
+    	// Iteratively runs the kmeans map reduce jobs for maxIterations
+    	// or until the centroids don't change anymore
+    	while(iteration < maxIterations && isChanged) {
+    		populateOldCentroids();
+    		
+    		// Create map reduce jobs
+    		try {	
+    			jobs[iteration] = createUpdateJob(iteration, inputDirectory, outputDirectory);
+    			jobs[iteration].waitForCompletion(true);
+    		} catch(Exception e) {
+    			System.out.println("Create map reduce jobs failed");
+    		}
+    		isChanged = changeStatus();
+    		iteration++;
+    	}
+    	
+    	return iteration;
+    }
+    
+    /**
+     * Populate the old centroids
+     */
+    public static void populateOldCentroids() {
+    	for(int i=0; i<KMeans.centroids.size(); i++) {
+    		oldCentroids.add(new Point(KMeans.centroids.get(i)));
+    	}
+    }
+    
+    /**
+     * Check if new centroids are changed, see if converged 
+     * @return boolean
+     */
+    public static boolean changeStatus() {
+    	for(int i=0; i<oldCentroids.size(); i++) {
+    		if(KMeans.centroids.get(i).compareTo(oldCentroids.get(i)) != 0) {
+    			return true;
+    		}
+    	}
+    	return false;
     }
 }
