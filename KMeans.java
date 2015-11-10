@@ -226,8 +226,10 @@ public class KMeans {
 
         // At this point, the centroids have been initialized.  This calls the student implemented
         // Jobs.
+        System.out.print("==========Run update jobs");
         int iters = UpdateJobRunner.runUpdateJobs(10, inputDirectory, outputDirectory);
-
+        System.out.print("==========Complete run update jobs");
+        
         System.out.println("============================");
         System.out.println("KMeans execution successful.");
         System.out.println("----------------------------");

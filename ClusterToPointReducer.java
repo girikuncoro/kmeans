@@ -17,6 +17,8 @@ public class ClusterToPointReducer extends Reducer<IntWritable, Point, IntWritab
 		int counter = 0;
 		Point newCentroid = new Point(KMeans.centroids.get(0).getDimension());
 		
+		System.out.println("***********REDUCER is Called!!*********");
+		
 		// Sum points divided by number of points in cluster
 		for(Point p : values) {
 			counter++;

@@ -22,6 +22,8 @@ public class PointToClusterMapper extends Mapper<Text, Text, IntWritable, Point>
 		float nearestDistance = Float.MAX_VALUE;
 		int nearestIdx = 0;
 		
+		System.out.println("***********MAPPER is Called!!*********");
+		
 		// Get config for the job
 		Configuration config = context.getConfiguration();
 		
@@ -35,6 +37,9 @@ public class PointToClusterMapper extends Mapper<Text, Text, IntWritable, Point>
 				nearestIdx = i;
 			}
 		}
+		
+		System.out.println("Key:: " + nearestIdx + " for " + point);
+		
 		IntWritable cKey = new IntWritable(nearestIdx);
 		context.write(cKey, point);
 	}
