@@ -135,11 +135,11 @@ public class Point implements WritableComparable<Point> {
 		
 		double offset = 0.000001;
 		// Order lexicographically
-		for(int i=0; i<dimension; i++) {
+		for(int i=0; i<this.dimension; i++) {
 			double difference = this.attrs.get(i) - o.attrs.get(i);
 			if(difference > offset) {
 				return 1;
-			} else if(difference < offset) {
+			} else if(difference < -offset) {
 				return -1;
 			}
 		}
@@ -176,6 +176,7 @@ public class Point implements WritableComparable<Point> {
     	// Use longer dimensions if differ
     	int dim;
     	if(x.dimension != y.dimension) {
+    		System.out.println("Different dimensions");
     		dim = x.dimension > y.dimension ? x.dimension : y.dimension;
     	} else {
     		dim = x.dimension;
@@ -195,7 +196,7 @@ public class Point implements WritableComparable<Point> {
     public static final Point multiplyScalar(Point x, float c)
     {
     	Point res = new Point(x.dimension);
-    	for(int i=0; i<res.dimension; i++) {
+    	for(int i=0; i<x.dimension; i++) {
     		res.attrs.set(i, new Float(x.attrs.get(i).floatValue() * c));
     	}
     	return res;

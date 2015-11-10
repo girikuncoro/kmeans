@@ -27,10 +27,14 @@ public class UpdateJobRunner
     public static Job createUpdateJob(int jobId, String inputDirectory, String outputDirectory)
         throws IOException
     {
+    	System.out.println("============Creating job configuration");
     	// Create new job configuration
     	Job job = new Job(new Configuration(), "job"+Integer.toString(jobId));
     	job.setJarByClass(KMeans.class);
+    	
+    	System.out.println("=============Setting mapper class");
     	job.setMapperClass(PointToClusterMapper.class);
+    	System.out.println("=============Setting mapoutput key class");
     	job.setMapOutputKeyClass(IntWritable.class);
     	job.setMapOutputValueClass(Point.class);
     	job.setReducerClass(ClusterToPointReducer.class);
@@ -38,8 +42,10 @@ public class UpdateJobRunner
     	job.setOutputValueClass(Point.class);
     	
     	FileInputFormat.addInputPath(job, new Path(inputDirectory));
-    	FileOutputFormat.setOutputPath(job, new Path(outputDirectory));
+    	FileOutputFormat.setOutputPath(job, new Path(outputDirectory + "/job" + Integer.toString(jobId)));
     	job.setInputFormatClass(KeyValueTextInputFormat.class);
+    	
+    	System.out.println("=============Return job");
     	
         return job;
     }
@@ -66,17 +72,25 @@ public class UpdateJobRunner
     	int iteration = 0;
     	boolean isChanged = true;
     	Job[] jobs = new Job[maxIterations];
-    	populateOldCentroids();
     	
+    	for(int i=0; i<KMeans.centroids.size(); i++) {
+    		oldCentroids.add(new Point(KMeans.centroids.get(i)));
+    	}
+    	
+    	System.out.println("=============Run iteration");
     	// Iteratively runs the kmeans map reduce jobs for maxIterations
     	// or until the centroids don't change anymore
-    	while(iteration < maxIterations && isChanged) {
-    		populateOldCentroids();
+    	while(iteration <= maxIterations && isChanged) {
+    		for(int i=0; i<KMeans.centroids.size(); i++) {
+        		oldCentroids.set(i, new Point(KMeans.centroids.get(i)));
+        	}
     		
     		// Create map reduce jobs
     		try {	
     			jobs[iteration] = createUpdateJob(iteration, inputDirectory, outputDirectory);
+    			System.out.println("=========Finished create update job");
     			jobs[iteration].waitForCompletion(true);
+    			System.out.println("=========Finished wait completion");
     		} catch(Exception e) {
     			System.out.println("Create map reduce jobs failed");
     		}
@@ -85,15 +99,6 @@ public class UpdateJobRunner
     	}
     	
     	return iteration;
-    }
-    
-    /**
-     * Populate the old centroids
-     */
-    public static void populateOldCentroids() {
-    	for(int i=0; i<KMeans.centroids.size(); i++) {
-    		oldCentroids.add(new Point(KMeans.centroids.get(i)));
-    	}
     }
     
     /**
