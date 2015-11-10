@@ -9,10 +9,13 @@ import org.apache.hadoop.io.*; // Writable
  * A Point implements WritableComparable so that Hadoop can serialize
  * and send Point objects across machines.
  *
- * NOTE: This implementation is NOT complete.  As mentioned above, you need
+ * NOTE: This implementation is NOT complete.  As mentioned above,  you need
  * to implement WritableComparable at minimum.  Modify this class as you see fit.
  */
-public class Point {
+public class Point implements WritableComparable<Point> {
+	ArrayList<Float> attrs = new ArrayList<Float>();
+	int dimension = 0;
+	
     /**
      * Construct a Point with the given dimensions [dim]. The coordinates should all be 0.
      * For example:
@@ -20,8 +23,10 @@ public class Point {
      */
     public Point(int dim)
     {
-        System.out.println("TODO");
-        System.exit(1);
+    	dimension = dim;
+    	for(int i=0; i<dim; i++) {
+    		attrs.add(new Float(.0));
+    	}
     }
 
     /**
@@ -33,8 +38,11 @@ public class Point {
      */
     public Point(String str)
     {
-        System.out.println("TODO");
-        System.exit(1);
+        String[] nums = str.split(" ");
+        dimension = nums.length;
+        for(String n:nums) {
+        	attrs.add(Float.parseFloat(n));
+        }
     }
 
     /**
@@ -42,19 +50,19 @@ public class Point {
      */
     public Point(Point other)
     {
-        System.out.println("TODO");
-        System.exit(1);
+    	this.dimension = other.getDimension();
+    	for(int i=0; i<dimension; i++) {
+    		attrs.add(other.attrs.get(i));
+    	}
     }
-
+	
     /**
      * @return The dimension of the point.  For example, the point [x=0, y=1] has
      * a dimension of 2.
      */
     public int getDimension()
     {
-        System.out.println("TODO");
-        System.exit(1);
-        return 0;
+        return dimension;
     }
 
     /**
@@ -66,32 +74,98 @@ public class Point {
      */
     public String toString()
     {
-        System.out.println("TODO");
-        System.exit(1);
-        return null;
+    	String res = "";
+    	for(int i=0; i<dimension-1; i++) {
+    		res += attrs.get(i) + " ";
+    	}
+    	return res + attrs.get(dimension-1);
     }
 
+	/**
+	 * Serialize the fields of this object to out
+	 * @param out, DataOutput to serialize this object into
+	 */
+	@Override
+	public void write(DataOutput out) throws IOException {
+		out.writeInt(dimension);
+		for(int i=0; i<dimension; i++) {
+			out.writeFloat(attrs.get(i));
+		}
+	}
+	
+    /**
+     * Deserialize the fields of this object from in.
+     * For efficiency, implementations should attempt to 
+     * reuse storage in the existing object where possible
+     * @param in, DataInput to deseriablize this object from
+     */
+	@Override
+	public void readFields(DataInput in) throws IOException {
+		dimension = in.readInt();
+		for(int i=0; i<dimension; i++) {
+			attrs.set(i, in.readFloat());
+		}
+	}
+	
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int res = 1;
+		int tmp = 0;
+		res = prime * res + dimension;
+		for(Float a : attrs) {
+			tmp += a;
+		}
+		return res * prime + tmp;
+	}
+	
     /**
      * One of the WritableComparable methods you need to implement.
      * See the Hadoop documentation for more details.
      * You should order the points "lexicographically" in the order of the coordinates.
      * Comparing two points of different dimensions results in undefined behavior.
      */
-    public int compareTo(Object o)
-    {   
-        System.out.println("TODO");
-        System.exit(1);
-        return 0;
-    }
-
+	@Override
+	public int compareTo(Point o) {
+		// Undefined behavior for different dimensions
+		if(this.dimension != o.dimension) {
+			System.err.println("Different dimensions, undefined behavior");
+			System.exit(1);
+		}
+		
+		double offset = 0.000001;
+		// Order lexicographically
+		for(int i=0; i<dimension; i++) {
+			double difference = this.attrs.get(i) - o.attrs.get(i);
+			if(difference > offset) {
+				return 1;
+			} else if(difference < offset) {
+				return -1;
+			}
+		}
+		return 0;
+	}
+	
     /**
      * @return The L2 distance between two points.
      */
     public static final float distance(Point x, Point y)
     {
-        System.out.println("TODO");
-        System.exit(1);
-        return (float)0.0;
+    	// Undefined behavior for different dimensions
+    	if(x.dimension != y.dimension) {
+    		System.err.println("Different dimensions, undefined behavior");
+    		System.exit(1);
+    	}
+    	
+    	// Calculate Euclidean distance
+    	double agg = 0.0; 
+    	
+    	for(int i=0; i<x.dimension; i++) {
+    		double diff = Math.abs(x.attrs.get(i) - y.attrs.get(i));
+    		agg += diff*diff;
+    	}
+    	
+        return (float)Math.sqrt(agg);
     }
 
     /**
@@ -99,9 +173,20 @@ public class Point {
      */
     public static final Point addPoints(Point x, Point y)
     {
-        System.out.println("TODO");
-        System.exit(1);
-        return null;
+    	// Use longer dimensions if differ
+    	int dim;
+    	if(x.dimension != y.dimension) {
+    		dim = x.dimension > y.dimension ? x.dimension : y.dimension;
+    	} else {
+    		dim = x.dimension;
+    	}
+    	
+    	// Aggregate points
+    	Point res = new Point(dim);
+    	for(int i=0; i<dim; i++) {
+    		res.attrs.set(i, new Float(x.attrs.get(i).floatValue() + y.attrs.get(i).floatValue()));
+    	}
+    	return res;
     }
 
     /**
@@ -109,8 +194,10 @@ public class Point {
      */
     public static final Point multiplyScalar(Point x, float c)
     {
-        System.out.println("TODO");
-        System.exit(1);
-        return null;
+    	Point res = new Point(x.dimension);
+    	for(int i=0; i<res.dimension; i++) {
+    		res.attrs.set(i, new Float(x.attrs.get(i).floatValue() * c));
+    	}
+    	return res;
     }
 }
