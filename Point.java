@@ -13,7 +13,7 @@ import org.apache.hadoop.io.*; // Writable
  * to implement WritableComparable at minimum.  Modify this class as you see fit.
  */
 public class Point implements WritableComparable<Point> {
-	ArrayList<Float> attrs = new ArrayList<Float>();
+	ArrayList<Float> attrs;
 	int dimension = 0;
 	
     /**
@@ -21,11 +21,15 @@ public class Point implements WritableComparable<Point> {
      * For example:
      * Constructing a Point(2) should create a point (x_0 = 0, x_1 = 0)
      */
+	public Point() {		
+		attrs = new ArrayList<Float>();
+	}
     public Point(int dim)
     {
+    	attrs = new ArrayList<Float>();
     	dimension = dim;
     	for(int i=0; i<dim; i++) {
-    		attrs.add(new Float(.0));
+    		attrs.add(new Float(0.0f));
     	}
     }
 
@@ -38,6 +42,7 @@ public class Point implements WritableComparable<Point> {
      */
     public Point(String str)
     {
+    	attrs = new ArrayList<Float>();
         String[] nums = str.split(" ");
         dimension = nums.length;
         for(String n:nums) {
@@ -50,6 +55,7 @@ public class Point implements WritableComparable<Point> {
      */
     public Point(Point other)
     {
+    	attrs = new ArrayList<Float>();
     	this.dimension = other.getDimension();
     	for(int i=0; i<dimension; i++) {
     		attrs.add(other.attrs.get(i));
@@ -101,22 +107,13 @@ public class Point implements WritableComparable<Point> {
      */
 	@Override
 	public void readFields(DataInput in) throws IOException {
+		attrs = new ArrayList<Float>();
 		dimension = in.readInt();
 		for(int i=0; i<dimension; i++) {
-			attrs.set(i, in.readFloat());
+			//attrs.set(i, in.readFloat());
+			attrs.add(in.readFloat());
 		}
-	}
-	
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int res = 1;
-		int tmp = 0;
-		res = prime * res + dimension;
-		for(Float a : attrs) {
-			tmp += a;
-		}
-		return res * prime + tmp;
+		System.out.println("point in read****" + attrs.toString());
 	}
 	
     /**
