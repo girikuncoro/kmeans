@@ -110,10 +110,8 @@ public class Point implements WritableComparable<Point> {
 		attrs = new ArrayList<Float>();
 		dimension = in.readInt();
 		for(int i=0; i<dimension; i++) {
-			//attrs.set(i, in.readFloat());
 			attrs.add(in.readFloat());
 		}
-		System.out.println("point in read****" + attrs.toString());
 	}
 	
     /**
