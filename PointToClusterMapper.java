@@ -18,17 +18,18 @@ public class PointToClusterMapper extends Mapper<Text, Text, IntWritable, Point>
 	// Called once for each key/value pair in the input split
 	public void map(Text key, Text value, Context context) throws IOException, InterruptedException {
 		Point point = new Point(key.toString());
-		Point nearestCent = null;
 		float nearestDistance = Float.MAX_VALUE;
 		int nearestIdx = 0;
 		
-		// Get config for the job
-		Configuration config = context.getConfiguration();
+		// Init the nearest centroid to null
+		Point nearestCent = null;
 		
 		// Find least Euclidian distance
 		for(int i=0; i<KMeans.centroids.size(); i++) {
 			Point cent = new Point(KMeans.centroids.get(i));
 			float dist = Point.distance(cent, point);
+			
+			// Assign the new centroid
 			if(nearestCent == null || dist < nearestDistance) {
 				nearestCent = new Point(cent);
 				nearestDistance = dist;
@@ -37,6 +38,8 @@ public class PointToClusterMapper extends Mapper<Text, Text, IntWritable, Point>
 		}
 		
 		IntWritable cKey = new IntWritable(nearestIdx);
+		
+		// Nearest index as key output
 		context.write(cKey, point);
 	}
 }
